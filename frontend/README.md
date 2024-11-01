@@ -1,39 +1,50 @@
-# React Frontend Template
+# React + TypeScript + Vite
 
-This project is a web app built with React to be used as a starter template.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Built With
+Currently, two official plugins are available:
 
-* [React](https://reactjs.org/)
-* [Docker](https://www.docker.com/)
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Prerequisites
+## Expanding the ESLint configuration
 
-You will need the following things properly installed on your computer:
+If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
 
-* [Git](http://git-scm.com/)
-* [React](https://reactjs.org/)
-* [Docker](https://www.docker.com/)
+- Configure the top-level `parserOptions` property like this:
 
-## Installation
+```js
+export default tseslint.config({
+  languageOptions: {
+    // other options...
+    parserOptions: {
+      project: ['./tsconfig.node.json', './tsconfig.app.json'],
+      tsconfigRootDir: import.meta.dirname,
+    },
+  },
+})
+```
 
-* run `git clone https://github.com/caseyr003/flask-react-template.git`
+- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
+- Optionally add `...tseslint.configs.stylisticTypeChecked`
+- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
 
-## Running
+```js
+// eslint.config.js
+import react from 'eslint-plugin-react'
 
-To run the project locally follow the following steps:
-
-* change into the project directory
-* `docker build -t frontend-react .`
-* `docker run -p 3000:3000 -v /HOST/PATH/TO/FRONTEND/FOLDER:/app frontend-react`
-
-## License
-
-This project is licensed under the MIT License
-
-## Extra information
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-Below you will find some information on how to perform common tasks.<br>
-You can find the most recent guide on how to perform common tasks [here](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/template/README.md).
+export default tseslint.config({
+  // Set the react version
+  settings: { react: { version: '18.3' } },
+  plugins: {
+    // Add the react plugin
+    react,
+  },
+  rules: {
+    // other rules...
+    // Enable its recommended rules
+    ...react.configs.recommended.rules,
+    ...react.configs['jsx-runtime'].rules,
+  },
+})
+```
