@@ -28,7 +28,40 @@ def group_lines(lines, angle_threshold=1, distance_threshold=10):
     
     return groups
 
-def extend_lines(image_path, output_path):
+import math
+
+def extend_line(line, extension):
+    x1, y1, x2, y2 = line
+    
+    # Calculate line vector
+    dx = x2 - x1
+    dy = y2 - y1
+    
+    # Calculate line length
+    length = math.sqrt(dx**2 + dy**2)
+    
+    # Normalize vector
+    if length > 0:
+        dx /= length
+        dy /= length
+    
+    # Scale vector by extension amount
+    dx *= extension
+    dy *= extension
+    
+    # Extend both endpoints
+    new_x1 = x1 - dx
+    new_y1 = y1 - dy
+    new_x2 = x2 + dx
+    new_y2 = y2 + dy
+    
+    return (new_x1, new_y1, new_x2, new_y2)
+
+def bulk_out_lines(lines):
+    extended_lines = [[extend_line(tuple(line[0]), 1)] for line in lines]
+    return extended_lines
+
+def generate_lines(image_path, output_path):
     # Load the image
     img = cv2.imread(image_path)
     # Convert to grayscale
@@ -87,7 +120,11 @@ def extend_lines(image_path, output_path):
         
         return np.array(merged_lines)
 
-    merged_parallel_lines = lines#merge_lines(lines)
+    
+    print(lines)
+    for i in range(30):
+        lines = bulk_out_lines(lines)
+    merged_parallel_lines = lines
     print(merged_parallel_lines)
 
      # Group lines
