@@ -5,6 +5,7 @@ from pdf2image import convert_from_path
 import cv2
 import numpy as np
 
+from box_utilites import remove_grey_boxes
 from svg_generation import generate_svg_from_lines, save_svg
 from line_manipulation import generate_lines
 from thicken import thicken_everything, thicken_everything_2, thicken_lines
@@ -266,6 +267,8 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
 
     remove_text_from_pdf(pdf_path, output_pdf)
     image_path = pdf_to_images(output_pdf)
+
+    #image_path = remove_grey_boxes(image_path, output_png)
 
     # Turn PNG image into bit map
     image = read_in_image(image_path)
