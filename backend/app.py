@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import base64
+from backend.classical_image_recognition.pipline import run_preprocessing_pipeline, run_main_pipeline
 
 INPUT_DIR = 'backend/files/input_pdfs'
 OUTPUT_PNG_DIR = 'backend/files/output_pngs'
@@ -21,7 +22,6 @@ def preprocess():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    # file_content = file.read()
     file_name = file.filename
     file_media_type = file.mimetype
 
@@ -35,7 +35,7 @@ def preprocess():
     print(f'File media type: {file_media_type}')
 
     # Read the processed files
-    png_file_path = os.path.join(OUTPUT_PNG_DIR, 'test.png')
+    png_file_path = run_preprocessing_pipeline(file_path)
 
     if not os.path.exists(png_file_path):
         return jsonify({'error': 'Processed files not found'}), 404
@@ -65,8 +65,7 @@ def process():
     print(f'x: {x}, y: {y}, width: {width}, height: {height}')
 
     # Read the processed files
-    png_file_path = os.path.join(OUTPUT_PNG_DIR, 'test.png')
-    svg_file_path = os.path.join(OUTPUT_SVG_DIR, 'test.svg')
+    png_file_path, svg_file_path = run_main_pipeline(x, y, width, height)
 
     if not os.path.exists(png_file_path) or not os.path.exists(svg_file_path):
         return jsonify({'error': 'Processed files not found'}), 404
