@@ -92,5 +92,3 @@ def remove_grey_boxes_with_scale(image_path, output_path, window_size=15, buffer
     # Save the result
     result_img.save(output_path)
     return output_path
-
-#remove_grey_boxes('backend/images/L1_4711_Tobel_page_1.png', window_size=15, buffer_size=10)
