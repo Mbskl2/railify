@@ -52,7 +52,7 @@ def remove_text_from_pdf(input_pdf_path, output_pdf_path):
     print(f"Text removed. Saved new PDF as '{output_pdf_path}'")
 
 
-def grayscale_to_bitmap(image, output_path, threshold=0.8):
+def grayscale_to_bitmap(image, output_path):
     """
     Convert a grayscale image to a binary bitmap based on a threshold, then save it.
 
@@ -64,11 +64,9 @@ def grayscale_to_bitmap(image, output_path, threshold=0.8):
     Returns:
     - np.ndarray: The processed binary bitmap image.
     """
-    # Ensure the threshold is within the 0-255 range
-    thresh_value = int(threshold * 255)
 
     # Apply thresholding
-    _, bitmap_image = cv2.threshold(image, thresh_value, 255, cv2.THRESH_BINARY)
+    _, bitmap_image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)
 
     # Save the binary image
     cv2.imwrite(output_path, bitmap_image)
@@ -254,7 +252,7 @@ def preserve_thin_lines(img_path, output_path, blob_size=10):
 
 # Example usage
 if __name__ == '__main__':
-    pdf_path = "backend/testing_pdfs/L1.pdf"
+    pdf_path = "backend/testing_pdfs/L1_4711_Tobel.pdf"
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
 
@@ -273,8 +271,9 @@ if __name__ == '__main__':
     image_path = thicken_everything_2(image_path, output_png)
 
     #image_path = thicken_lines(image_path, output_png)
+
     # # Turn image into graph
-    nodes, edges_list, edge_image = image_to_graph(image_path)
+    #nodes, edges_list, edge_image = image_to_graph(image_path)
 
     # Display or save edge_image to visualize detected lines
-    cv2.imwrite(output_png, edge_image)
+    #cv2.imwrite(output_png, edge_image)
