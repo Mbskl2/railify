@@ -15,7 +15,7 @@ if img is None:
 thresh = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 2)
 
 # Step 2: Morphological Operations to Clean Up Noise
-kernel = np.ones((3, 3), np.uint8)
+kernel = np.ones((4, 4), np.uint8)
 processed = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel, iterations=1)
 
 # Step 3: Detect Contours and Filter by Size
