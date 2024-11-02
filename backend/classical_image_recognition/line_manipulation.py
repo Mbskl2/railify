@@ -109,6 +109,7 @@ def extend_lines(image_path, output_path):
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
     print(return_lines)
+    cv2.imwrite(output_path, img)
     return output_path, return_lines
 
 
