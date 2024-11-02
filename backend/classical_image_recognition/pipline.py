@@ -5,7 +5,7 @@ from pdf2image import convert_from_path
 import cv2
 import numpy as np
 
-from box_utilites import remove_grey_boxes
+from box_utilites import remove_grey_boxes, remove_grey_boxes_with_scale
 from svg_generation import generate_svg_from_lines, save_svg
 from line_manipulation import generate_lines
 from thicken import thicken_everything, thicken_everything_2, thicken_lines
