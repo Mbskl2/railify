@@ -10,7 +10,7 @@ import itertools
 import math
 import os
 
-from svg_generation import generate_svg_from_lines, render_svg
+from svg_generation import generate_svg_from_lines, save_svg
 from line_manipulation import extend_lines
 from thicken import thicken_everything, thicken_everything_2, thicken_lines
 
@@ -489,7 +489,7 @@ def run_main_pipeline(image_path, border_x, border_y, border_width, border_heigh
 
     height, width = image.shape
     svg_text = generate_svg_from_lines(lines, width, height)
-    render_svg(svg_text)
+    save_svg(svg_text)
     #image_path = thicken_lines(image_path, output_png)
 
     # # Turn image into graph
