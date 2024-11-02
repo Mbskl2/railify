@@ -2,17 +2,26 @@ import os
 import fitz
 from pdf2image import convert_from_path
 
+from thicken import thicken_everything, thicken_everything_2, thicken_lines
+
 import cv2
 import numpy as np
+import itertools
+import math
+import os
+from PIL import Image
+
+from backend.classical_image_recognition.box_utilites import remove_grey_boxes, remove_grey_boxes_with_scale
+from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
+from backend.classical_image_recognition.line_manipulation import generate_lines as extend_lines
+from backend.classical_image_recognition.thicken import thicken_everything, thicken_everything_2, thicken_lines
+
 
 from box_utilites import remove_grey_boxes, remove_grey_boxes_with_scale
 from svg_generation import generate_svg_from_lines, save_svg
 from line_manipulation import generate_lines
 from thicken import thicken_everything, thicken_everything_2, thicken_lines
 
-# from classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
-# from classical_image_recognition.line_manipulation import extend_lines
-# from classical_image_recognition.thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 # Setup pipline to read in Image and Extract Lines
 def pdf_to_images(pdf_path, output_folder='backend/temp', dpi=300, name="page"):
@@ -256,17 +265,109 @@ def preserve_thin_lines(img_path, output_path, blob_size=10):
 
     return processed_image
 
+def crop_image(img_path, output_path, x, y, border_width_x, border_width_y):
+    """
+    Crops an image based on the given starting point (x, y) and border widths.
+
+    Parameters:
+    - img_path (str): Path to the input image.
+    - output_path (str): Path where the cropped image will be saved.
+    - x (int): The x-coordinate of the top-left corner of the cropping region.
+    - y (int): The y-coordinate of the top-left corner of the cropping region.
+    - border_width_x (int): The width of the cropping region.
+    - border_width_y (int): The height of the cropping region.
+
+    Returns:
+    - cropped_image (np.ndarray): The cropped section of the image.
+    """
+    # Load the image
+    image = cv2.imread(img_path)
+    if image is None:
+        raise ValueError("Image could not be loaded. Check the file path.")
+
+    # Define the cropping region
+    x_end = x + border_width_x
+    y_end = y + border_width_y
+
+    # Ensure the cropping region is within image bounds
+    if x < 0 or y < 0 or x_end > image.shape[1] or y_end > image.shape[0]:
+        raise ValueError("Cropping region exceeds image boundaries.")
+
+    # Crop the image
+    cropped_image = image[y:y_end, x:x_end]
+
+    # Save the cropped image to the specified output path
+    cv2.imwrite(output_path, cropped_image)
+
+    return cropped_image
+
+def thicken_black_pixels(image_path, output_path, kernel_size=3, iterations=3):
+    # Load the image in grayscale
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+    # Apply binary thresholding to ensure black areas are clearly defined
+    _, binary_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
+
+    # Create a kernel for dilation
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    # Apply dilation to thicken black pixels
+    thickened_img = cv2.dilate(binary_img, kernel, iterations=iterations)
+
+    # Invert the image back to match original colors
+    thickened_img = cv2.bitwise_not(thickened_img)
+
+    # Save the result
+    cv2.imwrite(output_path, thickened_img)
+    print(f"Image with thickened black pixels saved to {output_path}")
+
+
 def run_preprocessing_pipeline(pdf_path):
     image_path = pdf_to_images(pdf_path)
     return image_path
+
+def resize_image(img_path, output_path, width=1920, height=1080):
+    """
+    Resizes the image to the specified width and height.
+
+    Parameters:
+    - img_path (str): Path to the input image.
+    - output_path (str): Path where the resized image will be saved.
+    - width (int): The target width of the resized image.
+    - height (int): The target height of the resized image.
+
+    Returns:
+    - resized_image (np.ndarray): The resized image.
+    """
+    # Load the image
+    image = cv2.imread(img_path)
+    if image is None:
+        raise ValueError("Image could not be loaded. Check the file path.")
+
+    # Resize the image to the specified dimensions
+    resized_image = cv2.resize(image, (width, height))
+
+    # Save the resized image to the specified output path
+    cv2.imwrite(output_path, resized_image)
+
+    return resized_image
 
 def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height):
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
     output_svg = os.path.join(os.curdir, "backend/temp/Temp.svg")
+    cropped_image_path = os.path.join(os.curdir, "backend/temp/Temp_Crop.png")
 
+    # HERE: Save Cropped Image for Output
+    image_path = pdf_to_images(pdf_path)
+    cropped_image = crop_image(image_path, cropped_image_path, border_x, border_y, border_width, border_height)
+
+
+    # HERE starts Pipeline
     remove_text_from_pdf(pdf_path, output_pdf)
     image_path = pdf_to_images(output_pdf)
+
+    crop_image(image_path, image_path, border_x, border_y, border_width, border_height)
 
     image_path = remove_grey_boxes(image_path, output_png)
 
@@ -279,13 +380,13 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
 
     # Turn image into graph
     # nodes, edges_list, edge_image = image_to_graph(image_path)
-    image_path = thicken_everything_2(image_path, output_png)
+    # image_path = thicken_everything_2(image_path, output_png)
 
-    image_path, lines = generate_lines(image_path, output_png)
+    image_path, lines = extend_lines(image_path, output_png)
 
-    height, width = image.shape 
+    height, width = image.shape
     svg_text = generate_svg_from_lines(lines, width, height)
-    output_svg = save_svg(svg_text)
+    output_svg = save_svg(svg_text, output_svg)
     #image_path = thicken_lines(image_path, output_png)
 
     # # Turn image into graph
@@ -295,7 +396,9 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     #cv2.imwrite(output_png, edge_image)
     return output_png, output_svg
 
-# Example usage
-if __name__ == '__main__':
-    pdf_path = "backend/testing_pdfs/L1_4711_Tobel.pdf"
-    run_main_pipeline(pdf_path, 0, 0, 100, 100)
+    return cropped_image_path, output_png, output_svg
+
+
+if __name__ == "__main__":
+    path = "backend/testing_pdfs/L1.pdf"
+    run_main_pipeline(path, 500, 1000, 3500, 1500)
