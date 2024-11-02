@@ -54,11 +54,16 @@ const App = () => {
     }));
   };
 
-  const handleMouseUp = (e: React.MouseEvent) => {
+  const handleMouseUp = () => {
     setIsDrawing(false);
-    // Save the border data here
-    console.log('Border data:', border);
-    e.stopPropagation();
+  };
+
+  const handleConfirmBorder = async () => {
+    setShowBorderCreation(false);
+    const { pngUrl, svgUrl } = await process(border);
+    setPngUrl(pngUrl);
+    setSvgUrl(svgUrl);
+    setShowComparison(true);
   };
 
   useEffect(() => {
@@ -81,6 +86,9 @@ const App = () => {
         >
           Drop your PDF anywhere
         </div>
+        {showBorderCreation && <button onClick={handleConfirmBorder} style={{ marginLeft: '10px' }}>
+            Confirm Border
+        </button>}
         {showComparison && <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <button onClick={() => setShowPng(!showPng)}>
             Turn PNG layer {showPng ? 'off' : 'on'}

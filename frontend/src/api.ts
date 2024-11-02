@@ -29,19 +29,17 @@ export const preprocess = async (file: File): Promise<string> => {
   }
 };
 
-export const process = async (
-  x: number,
-  y: number,
-  width: number,
-  height: number
-): Promise<{ pngUrl: string; svgUrl: string }> => {
+export const process = async (border: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}): Promise<{ pngUrl: string; svgUrl: string }> => {
   try {
-    const response = await axios.post("http://127.0.0.1:5000/api/process", {
-      x,
-      y,
-      width,
-      height,
-    });
+    const response = await axios.post(
+      "http://127.0.0.1:5000/api/process",
+      border
+    );
 
     const { png_data, svg_data } = response.data;
 

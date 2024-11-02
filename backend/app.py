@@ -54,8 +54,8 @@ def process():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
-    x = data.get('x')
-    y = data.get('y')
+    x = data.get('left')
+    y = data.get('top')
     width = data.get('width')
     height = data.get('height')
 
