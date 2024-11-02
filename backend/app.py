@@ -1,31 +1,31 @@
 from flask import Flask, request, jsonify
-
-# declare constants
-HOST = '0.0.0.0'
-PORT = 5000
+from flask_cors import CORS
 
 # initialize flask application
 app = Flask(__name__)
-
-# sample hello world page
-@app.route('/')
-def hello():
-    return "<h1>Hello World</h1>"
+CORS(app)  # Enable CORS for all routes
 
 # sample api endpoint
-@app.route('/api/test', methods=['GET', 'POST'])
-def test():
-    if request.method == 'POST':
-        # get parameters from post request
-        parameters = request.get_json()
-        if 'test' in parameters:
-            return jsonify({'value': parameters['test']})
-        return jsonify({'error'})
-    else:
-        return jsonify({'test': 'success'})
+@app.route('/api/process', methods=['POST'])
+def process():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in the request'}), 400
 
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    file_content = file.read()
+    file_name = file.filename
+    file_media_type = file.mimetype
+
+    if file_media_type != 'application/pdf':
+        return jsonify({'error': f'Invalid file type: {file_media_type}'}), 400
+
+    print(f'File name: {file_name}')
+    print(f'File media type: {file_media_type}')
+    
+    return jsonify({'message': 'File processed successfully'}), 201
 
 if __name__ == '__main__':
-    app.run(host=HOST,
-            debug=True,
-            port=PORT)
+    app.run(host='0.0.0.0', debug=True, port=5000)
