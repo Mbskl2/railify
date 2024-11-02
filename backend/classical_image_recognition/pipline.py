@@ -251,11 +251,14 @@ def preserve_thin_lines(img_path, output_path, blob_size=10):
 
     return processed_image
 
-# Example usage
-if __name__ == '__main__':
-    pdf_path = "backend/testing_pdfs/L1_4711_Tobel.pdf"
+def run_preprocessing_pipeline(pdf_path):
+    image_path = pdf_to_images(pdf_path)
+    return image_path
+
+def run_main_pipeline(image_path, border_x, border_y, border_width, border_height):
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
+    output_svg = os.path.join(os.curdir, "backend/temp/Temp.svg")
 
     remove_text_from_pdf(pdf_path, output_pdf)
     image_path = pdf_to_images(output_pdf)
@@ -280,3 +283,9 @@ if __name__ == '__main__':
 
     # Display or save edge_image to visualize detected lines
     #cv2.imwrite(output_png, edge_image)
+    return output_png, output_svg
+
+# Example usage
+if __name__ == '__main__':
+    pdf_path = "backend/testing_pdfs/L1_4711_Tobel.pdf"
+    run_main_pipeline(pdf_path, 0, 0, 100, 100)
