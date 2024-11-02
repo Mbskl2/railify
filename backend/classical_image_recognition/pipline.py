@@ -5,6 +5,8 @@ from pdf2image import convert_from_path
 import cv2
 import numpy as np
 
+from thicken import thicken_everything, thicken_everything_2, thicken_lines
+
 
 # Setup pipline to read in Image and Extract Lines
 def pdf_to_images(pdf_path, output_folder='backend/temp', dpi=300, name="page"):
@@ -225,7 +227,10 @@ if __name__ == '__main__':
     image = read_in_image(image_path)
     image_path = grayscale_to_bitmap(image, output_png)
 
-    # Turn image into graph
+    image_path = thicken_everything_2(image_path, output_png)
+
+    image_path = thicken_lines(image_path, output_png)
+    # # Turn image into graph
     nodes, edges_list, edge_image = image_to_graph(image_path)
 
     # Display or save edge_image to visualize detected lines
