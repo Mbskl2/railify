@@ -268,7 +268,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     remove_text_from_pdf(pdf_path, output_pdf)
     image_path = pdf_to_images(output_pdf)
 
-    #image_path = remove_grey_boxes(image_path, output_png)
+    image_path = remove_grey_boxes(image_path, output_png)
 
     # Turn PNG image into bit map
     image = read_in_image(image_path)
