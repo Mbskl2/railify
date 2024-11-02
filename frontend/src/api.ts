@@ -1,6 +1,8 @@
 import axios from "axios";
 
-export const process = async (file: File) => {
+export const process = async (
+  file: File
+): Promise<{ pngUrl: string; svgUrl: string }> => {
   try {
     const formData = new FormData();
     formData.append("file", file);
@@ -17,12 +19,24 @@ export const process = async (file: File) => {
 
     const { png_data, svg_data } = response.data;
 
-    downloadFile(png_data, "image/png", "output.png");
-    downloadFile(svg_data, "image/svg+xml", "output.svg");
+    // downloadFile(png_data, "image/png", "output.png");
+    // downloadFile(svg_data, "image/svg+xml", "output.svg");
+
+    const pngUrl = createObjectUrl(png_data, "image/png");
+    const svgUrl = createObjectUrl(svg_data, "image/svg+xml");
+
+    return { pngUrl, svgUrl };
   } catch (error) {
     console.error("Error posting data:", error);
+    return { pngUrl: "", svgUrl: "" };
   }
 };
+
+function createObjectUrl(content: string, type: string) {
+  const blobPart = base64ToArrayBuffer(content);
+  const blob = new Blob([blobPart], { type });
+  return window.URL.createObjectURL(blob);
+}
 
 function downloadFile(content: string, type: string, name: string) {
   const blobPart = base64ToArrayBuffer(content);
