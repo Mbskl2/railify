@@ -38,40 +38,57 @@ def extend_lines(image_path, output_path):
 
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=50, minLineLength=10, maxLineGap=5)
     print(lines)
+    
+    def calculate_angle(line):
+        x1, y1, x2, y2 = line[0]
+        return np.arctan2(y2 - y1, x2 - x1) * 180 / np.pi  # Convert to degrees
 
-    # Function to calculate distance between two points
-    def distance(x1, y1, x2, y2):
-        return np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+    def are_lines_close(line1, line2, angle_tolerance=5, distance_tolerance=30):
+        angle1 = calculate_angle(line1)
+        angle2 = calculate_angle(line2)
+
+        # Check angle similarity
+        if abs(angle1 - angle2) > angle_tolerance:
+            return False
+
+        # Check distance between endpoints
+        x1_1, y1_1, x2_1, y2_1 = line1[0]
+        x1_2, y1_2, x2_2, y2_2 = line2[0]
+
+        distances = [
+            np.sqrt((x1_1 - x1_2)**2 + (y1_1 - y1_2)**2),
+            np.sqrt((x1_1 - x2_2)**2 + (y1_1 - y2_2)**2),
+            np.sqrt((x2_1 - x1_2)**2 + (y2_1 - y1_2)**2),
+            np.sqrt((x2_1 - x2_2)**2 + (y2_1 - y2_2)**2),
+        ]
+        
+        return any(d < distance_tolerance for d in distances)
 
     # Function to merge close parallel lines
-    def merge_lines(lines, max_distance=30):
+    def merge_lines(lines):
         merged_lines = []
+        
         for line in lines:
-            x1, y1, x2, y2 = line[0]
-            angle = np.arctan2(y2 - y1, x2 - x1)
-            
             found_match = False
+            
             for merged_line in merged_lines:
-                mx1, my1, mx2, my2 = merged_line[0]
-                m_angle = np.arctan2(my2 - my1, mx2 - mx1)
-                
-                # Check if lines are parallel (similar angle)
-                if abs(angle - m_angle) < np.pi / 36:  # 5 degrees tolerance
-                    # Check if lines are close
-                    if (distance(x1, y1, mx1, my1) < max_distance or
-                        distance(x2, y2, mx2, my2) < max_distance):
-                        # Merge lines by extending the existing line
-                        merged_line[0] = [min(x1, mx1), min(y1, my1),
-                                        max(x2, mx2), max(y2, my2)]
-                        found_match = True
-                        break
+                if are_lines_close(line, merged_line):
+                    # Merge by extending the existing line
+                    x1_new = min(line[0][0], merged_line[0][0])
+                    y1_new = min(line[0][1], merged_line[0][1])
+                    x2_new = max(line[0][2], merged_line[0][2])
+                    y2_new = max(line[0][3], merged_line[0][3])
+                    
+                    merged_line[0] = [x1_new, y1_new, x2_new, y2_new]
+                    found_match = True
+                    break
             
             if not found_match:
                 merged_lines.append(line)
-
+        
         return np.array(merged_lines)
 
-    merged_parallel_lines = merge_lines(lines)
+    merged_parallel_lines = lines#merge_lines(lines)
     print(merged_parallel_lines)
 
      # Group lines
