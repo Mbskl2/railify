@@ -18,9 +18,9 @@ def generate_svg_from_lines(line_segments, width=500, height=500):
 
 
 
-def render_svg(svg_content):
+def save_svg(svg_content):
     # Specify the output file path
-    output_file = 'output.svg'
+    output_file = 'temp/output.svg'
 
     # Write the SVG content to a file
     with open(output_file, 'w') as file:
