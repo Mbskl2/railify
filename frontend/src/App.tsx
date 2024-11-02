@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import Draggable from 'react-draggable';
+import Draggable, { DraggableData, DraggableEvent } from 'react-draggable';
 import { process } from './api';
 import './App.css';
 
-function App() {
+const App = () => {
   const [pngUrl, setPngUrl] = useState<string | null>(null);
   const [svgUrl, setSvgUrl] = useState<string | null>(null);
   const [showPng, setShowPng] = useState<boolean>(true);
   const [showSvg, setShowSvg] = useState<boolean>(true);
+  const [svgPosition, setSvgPosition] = useState({ x: 0, y: 0 });
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -21,6 +22,10 @@ function App() {
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
+  };
+
+  const handleDrag = (e: DraggableEvent, data: DraggableData) => {
+    setSvgPosition({ x: data.x, y: data.y });
   };
 
   useEffect(() => {
@@ -57,7 +62,7 @@ function App() {
           <div style={{ position: 'relative', display: 'inline-block'}}>
             {showPng && <img src={pngUrl} alt="Processed PNG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />}
             {showSvg && (
-              <Draggable>
+              <Draggable position={svgPosition} onDrag={handleDrag}>
                 <div>
                   <img src={svgUrl} alt="Processed SVG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'transparent' }} />
                 </div>
