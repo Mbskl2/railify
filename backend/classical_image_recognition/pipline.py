@@ -2,8 +2,13 @@ import os
 import fitz
 from pdf2image import convert_from_path
 
+from thicken import thicken_everything, thicken_everything_2, thicken_lines
+
 import cv2
 import numpy as np
+import itertools
+import math
+import os
 
 from thicken import thicken_everything, thicken_everything_2, thicken_lines
 
@@ -52,7 +57,7 @@ def remove_text_from_pdf(input_pdf_path, output_pdf_path):
     print(f"Text removed. Saved new PDF as '{output_pdf_path}'")
 
 
-def grayscale_to_bitmap(image, output_path):
+def grayscale_to_bitmap(image, output_path, threshold=0.8):
     """
     Convert a grayscale image to a binary bitmap based on a threshold, then save it.
 
@@ -64,6 +69,8 @@ def grayscale_to_bitmap(image, output_path):
     Returns:
     - np.ndarray: The processed binary bitmap image.
     """
+    # Ensure the threshold is within the 0-255 range
+    thresh_value = int(threshold * 255)
 
     # Apply thresholding
     _, bitmap_image = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY)
@@ -72,14 +79,6 @@ def grayscale_to_bitmap(image, output_path):
     cv2.imwrite(output_path, bitmap_image)
 
     return output_path
-
-
-import cv2
-import numpy as np
-import itertools
-import math
-import os
-
 
 def is_right_angle(p1, p2, p3):
     """
@@ -250,6 +249,197 @@ def preserve_thin_lines(img_path, output_path, blob_size=10):
 
     return processed_image
 
+
+def fill_line_interruptions(img_path, output_path, gap_size=50):
+    """
+    Processes a grayscale image to fill interruptions in horizontal and vertical lines only.
+
+    Parameters:
+    - img_path (str): Path to the grayscale bitmap image.
+    - output_path (str): Path where the processed image will be saved.
+    - gap_size (int): Maximum gap size to fill (larger values bridge larger gaps).
+
+    Returns:
+    - processed_image (np.ndarray): The processed image with interruptions in horizontal and vertical lines filled.
+    """
+    # Load the grayscale image
+    image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    if image is None:
+        raise ValueError("Image could not be loaded. Check the file path.")
+
+    # Ensure the image is binary
+    _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+
+    # Invert the image so that black lines become white for easier morphological operations
+    inverted_image = cv2.bitwise_not(binary_image)
+
+    # Fill horizontal gaps
+    horizontal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (gap_size, 1))
+    horizontal_filled = cv2.morphologyEx(inverted_image, cv2.MORPH_CLOSE, horizontal_kernel)
+
+    # Fill vertical gaps
+    vertical_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (1, gap_size))
+    vertical_filled = cv2.morphologyEx(inverted_image, cv2.MORPH_CLOSE, vertical_kernel)
+
+    # Combine both horizontal and vertical results
+    combined_filled = cv2.bitwise_or(horizontal_filled, vertical_filled)
+
+    # Invert back to original black-on-white format
+    processed_image = cv2.bitwise_not(combined_filled)
+
+    # Save the processed image to the specified output path
+    cv2.imwrite(output_path, processed_image)
+
+    return processed_image
+def resize_image(img_path, output_path, width=1920, height=1080):
+    """
+    Resizes the image to the specified width and height.
+
+    Parameters:
+    - img_path (str): Path to the input image.
+    - output_path (str): Path where the resized image will be saved.
+    - width (int): The target width of the resized image.
+    - height (int): The target height of the resized image.
+
+    Returns:
+    - resized_image (np.ndarray): The resized image.
+    """
+    # Load the image
+    image = cv2.imread(img_path)
+    if image is None:
+        raise ValueError("Image could not be loaded. Check the file path.")
+
+    # Resize the image to the specified dimensions
+    resized_image = cv2.resize(image, (width, height))
+
+    # Save the resized image to the specified output path
+    cv2.imwrite(output_path, resized_image)
+
+    return resized_image
+
+def remove_rectangles(img_path, output_path, min_aspect_ratio=0.8, max_aspect_ratio=1.2):
+    """
+    Processes a binary image to detect and remove rectangular shapes.
+
+    Parameters:
+    - img_path (str): Path to the binary (black and white) image.
+    - output_path (str): Path where the processed image will be saved.
+    - min_aspect_ratio (float): Minimum aspect ratio to consider a contour as a rectangle.
+    - max_aspect_ratio (float): Maximum aspect ratio to consider a contour as a rectangle.
+
+    Returns:
+    - processed_image (np.ndarray): The processed image with rectangles removed.
+    """
+    # Load the grayscale image
+    image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    if image is None:
+        raise ValueError("Image could not be loaded. Check the file path.")
+
+    # Ensure the image is binary
+    _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+
+    # Find contours in the binary image
+    contours, _ = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Copy the binary image to draw over rectangles
+    processed_image = binary_image.copy()
+
+    for contour in contours:
+        # Approximate the contour to reduce the number of points
+        epsilon = 0.02 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+
+        # Check if the contour has 4 vertices (indicating a possible rectangle)
+        if len(approx) == 4:
+            # Calculate the bounding box of the contour
+            x, y, w, h = cv2.boundingRect(contour)
+            aspect_ratio = w / float(h)
+
+            # Check if the aspect ratio is within the range for rectangles
+            if min_aspect_ratio <= aspect_ratio <= max_aspect_ratio:
+                # Fill the rectangle area with white (removing it from the image)
+                cv2.drawContours(processed_image, [contour], -1, (255), thickness=cv2.FILLED)
+
+    # Save the processed image to the specified output path
+    cv2.imwrite(output_path, processed_image)
+
+    return processed_image
+
+
+def remove_small_artifacts(image_path, output_path, artifact_size_threshold=10):
+    # Load the image in grayscale
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+    # Apply binary thresholding to make the artifacts more distinguishable
+    _, binary_img = cv2.threshold(img, 200, 255, cv2.THRESH_BINARY_INV)
+
+    # Find contours of the artifacts
+    contours, _ = cv2.findContours(binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Create a mask to remove small artifacts
+    mask = np.ones_like(binary_img) * 255  # Start with a white mask
+
+    for contour in contours:
+        # Only keep contours larger than the threshold
+        if cv2.contourArea(contour) > artifact_size_threshold:
+            cv2.drawContours(mask, [contour], -1, 0, thickness=cv2.FILLED)
+
+    # Apply the mask to the original image to remove small artifacts
+    cleaned_img = cv2.bitwise_and(img, img, mask=mask)
+
+    # Save the result
+    cv2.imwrite(output_path, cleaned_img)
+    print(f"Cleaned image saved to {output_path}")
+
+
+def remove_large_black_blocks(image_path, output_path, block_size_threshold=10):
+    # Load the image in grayscale
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+    # Apply binary thresholding to highlight black areas
+    _, binary_img = cv2.threshold(img, 50, 255, cv2.THRESH_BINARY_INV)
+
+    # Find contours of the black blocks
+    contours, _ = cv2.findContours(binary_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Create a mask to remove large black blocks
+    mask = np.ones_like(binary_img) * 255  # Start with a white mask
+
+    for contour in contours:
+        # Remove contours larger than the threshold (considered large black blocks)
+        if cv2.contourArea(contour) > block_size_threshold:
+            cv2.drawContours(mask, [contour], -1, 0, thickness=cv2.FILLED)
+
+    # Apply the mask to the original image to remove large black blocks
+    cleaned_img = cv2.bitwise_and(img, img, mask=mask)
+
+    # Save the result
+    cv2.imwrite(output_path, cleaned_img)
+    print(f"Cleaned image with large black blocks removed saved to {output_path}")
+
+
+def thicken_black_pixels(image_path, output_path, kernel_size=5, iterations=10):
+    # Load the image in grayscale
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+
+    # Apply binary thresholding to ensure black areas are clearly defined
+    _, binary_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
+
+    # Create a kernel for dilation
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    # Apply dilation to thicken black pixels
+    thickened_img = cv2.dilate(binary_img, kernel, iterations=iterations)
+
+    # Invert the image back to match original colors
+    thickened_img = cv2.bitwise_not(thickened_img)
+
+    # Save the result
+    cv2.imwrite(output_path, thickened_img)
+    print(f"Image with thickened black pixels saved to {output_path}")
+
+
+
 # Example usage
 if __name__ == '__main__':
     pdf_path = "backend/testing_pdfs/L1_4711_Tobel.pdf"
@@ -263,17 +453,31 @@ if __name__ == '__main__':
     image = read_in_image(image_path)
     image_path = grayscale_to_bitmap(image, output_png)
 
+    # Remove Rectangles
+    remove_rectangles(image_path, image_path)
+
     # Adjust Grayscale image
-    processed_image = preserve_thin_lines(image_path, image_path)
+    preserve_thin_lines(image_path, image_path)
+
+    # Thicken
+    thicken_black_pixels(image_path, image_path)
+
+    # Remove Artifacts and blck bocks
+    # remove_small_artifacts(image_path, image_path)
+    # remove_large_black_blocks(image_path, image_path)
+
+    # Resize image
+    # resize_image(image_path, output_png)
+
+    # Fill in Gaps
+    # fill_line_interruptions(image_path, output_png)
 
     # Turn image into graph
-    # nodes, edges_list, edge_image = image_to_graph(image_path)
-    image_path = thicken_everything_2(image_path, output_png)
+    # image_path = thicken_everything_2(image_path, image_path)
 
     #image_path = thicken_lines(image_path, output_png)
-
     # # Turn image into graph
-    #nodes, edges_list, edge_image = image_to_graph(image_path)
+    # nodes, edges_list, edge_image = image_to_graph(image_path)
 
     # Display or save edge_image to visualize detected lines
-    #cv2.imwrite(output_png, edge_image)
+    # cv2.imwrite(output_png, edge_image)
