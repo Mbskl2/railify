@@ -1,19 +1,11 @@
-import os
 import fitz
 from pdf2image import convert_from_path
 
-from thicken import thicken_everything, thicken_everything_2, thicken_lines
-
 import cv2
-import numpy as np
-import itertools
-import math
 import os
-from PIL import Image
 
 from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
 from backend.classical_image_recognition.line_manipulation import generate_lines as extend_lines
-from backend.classical_image_recognition.thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 
 # Setup pipline to read in Image and Extract Lines
@@ -33,9 +25,11 @@ def pdf_to_images(pdf_path, output_folder='backend/temp', dpi=300, name="page"):
 
     return image_path
 
+
 def read_in_image(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     return img
+
 
 def remove_text_from_pdf(input_pdf_path, output_pdf_path):
     # Open the PDF file
@@ -82,144 +76,6 @@ def grayscale_to_bitmap(image, output_path):
     return output_path
 
 
-import cv2
-import numpy as np
-import itertools
-import math
-import os
-
-
-def is_right_angle(p1, p2, p3):
-    """
-    Check if the angle formed by three points is approximately 90 degrees.
-    """
-
-    def distance(a, b):
-        return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
-
-    a = distance(p1, p2)
-    b = distance(p2, p3)
-    c = distance(p1, p3)
-
-    # Check if the points form a right triangle (Pythagorean theorem)
-    return abs(a ** 2 + b ** 2 - c ** 2) < 1e-2
-
-
-def filter_rectangles(nodes, edges_list):
-    """
-    Filter out rectangles based on nodes and edges.
-    """
-    # Convert edges list to a set for easy access
-    edges_set = set(edges_list)
-    rectangles = []
-
-    # Iterate over combinations of four nodes to find rectangles
-    for quad in itertools.combinations(nodes, 4):
-        # Check if they form a rectangle by looking at each pair of points
-        pairs = list(itertools.combinations(quad, 2))
-        lines = [pair for pair in pairs if pair in edges_set or (pair[1], pair[0]) in edges_set]
-
-        if len(lines) == 4:
-            # Check if the four points form right angles
-            p1, p2, p3, p4 = quad
-            if (is_right_angle(p1, p2, p3) and is_right_angle(p2, p3, p4) and
-                is_right_angle(p3, p4, p1) and is_right_angle(p4, p1, p2)):
-                rectangles.append(lines)
-
-    # Remove rectangle edges from edges_list
-    for rect in rectangles:
-        for edge in rect:
-            if edge in edges_list:
-                edges_list.remove(edge)
-            elif (edge[1], edge[0]) in edges_list:
-                edges_list.remove((edge[1], edge[0]))
-
-    # Filter out nodes that are only part of rectangles
-    new_nodes = [node for node in nodes if any(edge for edge in edges_list if node in edge)]
-
-    return new_nodes, edges_list
-
-
-def image_to_graph(img_path, edge_threshold1=200, edge_threshold2=300, min_line_length=100, max_line_gap=10):
-    """
-    Converts a grayscale image into a graph representation of nodes and edges using edge and line detection,
-    removes any graph components that consist of only two nodes and one edge, and filters out rectangles.
-
-    Parameters:
-    - img_path (str): Path to the grayscale image.
-    - edge_threshold1 (int): First threshold for the Canny edge detector.
-    - edge_threshold2 (int): Second threshold for the Canny edge detector.
-    - min_line_length (int): Minimum length of a line for Hough line detection.
-    - max_line_gap (int): Maximum gap between points on the same line for Hough line detection.
-
-    Returns:
-    - nodes (list): List of nodes (approximate coordinates of intersections).
-    - edges (list): List of edges (line segments connecting nodes).
-    - edge_image (np.ndarray): Image showing detected edges for visualization.
-    """
-    # Verify that the provided path is valid
-    if not isinstance(img_path, str) or not os.path.isfile(img_path):
-        raise ValueError("Invalid image path. Please provide a valid string path to an existing image file.")
-
-    # Load the grayscale image
-    image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    if image is None:
-        raise ValueError("Image could not be loaded. Check the file path.")
-
-    # Apply Canny edge detection with the specified thresholds
-    edges = cv2.Canny(image, edge_threshold1, edge_threshold2)
-
-    # Detect lines using Hough Transform
-    lines = cv2.HoughLinesP(edges, 1, np.pi / 180, threshold=50,
-                            minLineLength=min_line_length, maxLineGap=max_line_gap)
-
-    # Dictionary to hold nodes and edges in an adjacency list format
-    adjacency_list = {}
-    edge_image = np.zeros_like(image)
-    nodes = []
-    edges_list = []
-
-    if lines is not None:
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            start_node = (x1, y1)
-            end_node = (x2, y2)
-
-            # Add nodes and edges to adjacency list
-            if start_node not in adjacency_list:
-                adjacency_list[start_node] = set()
-            if end_node not in adjacency_list:
-                adjacency_list[end_node] = set()
-
-            adjacency_list[start_node].add(end_node)
-            adjacency_list[end_node].add(start_node)
-
-            # Draw the detected edge on edge_image for visualization
-            cv2.line(edge_image, start_node, end_node, 255, 1)
-
-    # Filter out nodes and edges that are part of a two-node, single-edge graph
-    for node, connections in adjacency_list.items():
-        if len(connections) == 1:
-            connected_node = list(connections)[0]
-            if len(adjacency_list[connected_node]) == 1:
-                # Both nodes are only connected to each other, so ignore this edge
-                continue
-
-        # Add the valid node and its edges
-        if node not in nodes:
-            nodes.append(node)
-        for connected_node in connections:
-            edge = (node, connected_node)
-            reverse_edge = (connected_node, node)
-            # Only add each edge once
-            if edge not in edges_list and reverse_edge not in edges_list:
-                edges_list.append(edge)
-
-    # Remove rectangles
-    nodes, edges_list = filter_rectangles(nodes, edges_list)
-
-    return nodes, edges_list, edge_image
-
 def preserve_thin_lines(img_path, output_path, blob_size=10):
     """
     Processes a grayscale bitmap image to remove thicker blobs or symbols while preserving thin lines.
@@ -258,6 +114,7 @@ def preserve_thin_lines(img_path, output_path, blob_size=10):
 
     return processed_image
 
+
 def crop_image(img_path, output_path, x, y, border_width_x, border_width_y):
     """
     Crops an image based on the given starting point (x, y) and border widths.
@@ -294,30 +151,6 @@ def crop_image(img_path, output_path, x, y, border_width_x, border_width_y):
 
     return cropped_image
 
-def thicken_black_pixels(image_path, output_path, kernel_size=3, iterations=3):
-    # Load the image in grayscale
-    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-
-    # Apply binary thresholding to ensure black areas are clearly defined
-    _, binary_img = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
-
-    # Create a kernel for dilation
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-
-    # Apply dilation to thicken black pixels
-    thickened_img = cv2.dilate(binary_img, kernel, iterations=iterations)
-
-    # Invert the image back to match original colors
-    thickened_img = cv2.bitwise_not(thickened_img)
-
-    # Save the result
-    cv2.imwrite(output_path, thickened_img)
-    print(f"Image with thickened black pixels saved to {output_path}")
-
-
-def run_preprocessing_pipeline(pdf_path):
-    image_path = pdf_to_images(pdf_path)
-    return image_path
 
 def resize_image(img_path, output_path, width=1920, height=1080):
     """
@@ -345,18 +178,20 @@ def resize_image(img_path, output_path, width=1920, height=1080):
 
     return resized_image
 
+
 def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height):
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
     output_svg = os.path.join(os.curdir, "backend/temp/Temp.svg")
     cropped_image_path = os.path.join(os.curdir, "backend/temp/Temp_Crop.png")
 
-    # HERE: Save Cropped Image for Output
+    #######################################################################################
+    # 1.) HERE: Save Cropped Image for Output
     image_path = pdf_to_images(pdf_path)
-    cropped_image = crop_image(image_path, cropped_image_path, border_x, border_y, border_width, border_height)
+    crop_image(image_path, cropped_image_path, border_x, border_y, border_width, border_height)
 
-
-    # HERE starts Pipeline
+    #######################################################################################
+    # 2.) HERE: Starts Pipeline to get Rail Structure
     remove_text_from_pdf(pdf_path, output_pdf)
     image_path = pdf_to_images(output_pdf)
 
@@ -366,28 +201,20 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     image = read_in_image(image_path)
     image_path = grayscale_to_bitmap(image, output_png)
 
-    # Adjust Grayscale image
-    processed_image = preserve_thin_lines(image_path, image_path)
+    # Start Removing Artefacts
+    preserve_thin_lines(image_path, image_path)
 
-    # Turn image into graph
-    # nodes, edges_list, edge_image = image_to_graph(image_path)
-    # image_path = thicken_everything_2(image_path, output_png)
-
+    # Extend Lines to Cover Gaps
     image_path, lines = extend_lines(image_path, output_png)
 
+    # Generate and save SVG
     height, width = image.shape
     svg_text = generate_svg_from_lines(lines, width, height)
     output_svg = save_svg(svg_text, output_svg)
-    #image_path = thicken_lines(image_path, output_png)
 
-    # # Turn image into graph
-    #nodes, edges_list, edge_image = image_to_graph(image_path)
+    # Adjust the SVG
 
-    # Display or save edge_image to visualize detected lines
-    #cv2.imwrite(output_png, edge_image)
-    return output_png, output_svg
-
-    return cropped_image_path, output_png, output_svg
+    return cropped_image_path, output_svg
 
 
 if __name__ == "__main__":
