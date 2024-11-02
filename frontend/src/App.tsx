@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Draggable from 'react-draggable';
 import { process } from './api';
 import './App.css';
 
@@ -53,9 +54,13 @@ function App() {
       </div>
       <div style={{ marginTop: '220px', textAlign: 'center' }}>
         {pngUrl && svgUrl && (
-          <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div style={{ position: 'relative', display: 'inline-block'}}>
             {showPng && <img src={pngUrl} alt="Processed PNG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />}
-            {showSvg && <img src={svgUrl} alt="Processed SVG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'transparent' }} />}
+            {showSvg && (
+              <Draggable>
+                <img src={svgUrl} alt="Processed SVG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'transparent' }} />
+              </Draggable>
+            )}
           </div>
         )}
       </div>
