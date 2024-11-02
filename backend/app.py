@@ -3,16 +3,16 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import base64
 
-INPUT_DIR = 'files/input_pdfs'
-OUTPUT_PNG_DIR = 'files/output_pngs'
-OUTPUT_SVG_DIR = 'files/output_svgs'
+INPUT_DIR = 'backend/files/input_pdfs'
+OUTPUT_PNG_DIR = 'backend/files/output_pngs'
+OUTPUT_SVG_DIR = 'backend/files/output_svgs'
 
 # initialize flask application
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
 # sample api endpoint
-@app.route('/api/process', methods=['POST'])
+@app.route('/api/preprocess', methods=['POST'])
 def preprocess():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
