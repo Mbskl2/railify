@@ -4,7 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 # Load the image
-img_path = "images/page_1.png"
+img_path = "backend/images/L1_4711_Tobel_page_1.png"
 img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
 
 # Check if the image loaded correctly
