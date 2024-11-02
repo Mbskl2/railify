@@ -9,7 +9,16 @@ def read_in_image(img_path):
 
 # Step 1 Crop
 
-# Step 2 Crop
+
+# Step 2 Remove text
+
+# Step 3 Remove colors
+
+# Step 4 Sharpen line
+
+# Step 5 Thicken lines
+
+# Step 6 Combine line segmenets that are separated
 
 
 if __name__ == '__main__':
