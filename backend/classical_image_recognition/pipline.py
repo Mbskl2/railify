@@ -5,6 +5,7 @@ from pdf2image import convert_from_path
 import cv2
 import numpy as np
 
+from line_manipulation import extend_lines
 from thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 
@@ -269,6 +270,8 @@ if __name__ == '__main__':
     # Turn image into graph
     # nodes, edges_list, edge_image = image_to_graph(image_path)
     image_path = thicken_everything_2(image_path, output_png)
+
+    image_path, lines = extend_lines(image_path, output_png)
 
     #image_path = thicken_lines(image_path, output_png)
 

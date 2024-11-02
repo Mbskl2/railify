@@ -37,7 +37,6 @@ def extend_lines(image_path, output_path):
     edges = cv2.Canny(gray, 50, 150, apertureSize=3)
 
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=50, minLineLength=10, maxLineGap=5)
-    print(lines)
     
     def calculate_angle(line):
         x1, y1, x2, y2 = line[0]
@@ -95,19 +94,22 @@ def extend_lines(image_path, output_path):
     groups = group_lines(merged_parallel_lines)
     
     # Merge line segments within each group
+    return_lines = []
     for group in groups:
         merged_lines = merge_line_segments(group)
         
         # Draw merged lines
         for line in merged_lines:
+            return_lines.append(line)
             x1, y1, x2, y2 = line
             cv2.line(img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 10)
     
-    # Display the result
-    cv2.imshow('Merged Lines', img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    return output_path
+    # # Display the result
+    # cv2.imshow('Merged Lines', img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    print(return_lines)
+    return output_path, return_lines
 
 
 def merge_line_segments(group):
@@ -129,6 +131,6 @@ def merge_line_segments(group):
     
     return result
 
-# Usage
-image_path = 'backend/temp/temp.png'
-extend_lines(image_path, 'result.png')
+# # Usage
+# image_path = 'backend/temp/temp.png'
+# extend_lines(image_path, 'result.png')
