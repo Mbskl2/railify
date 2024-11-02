@@ -13,7 +13,7 @@ CORS(app)  # Enable CORS for all routes
 
 # sample api endpoint
 @app.route('/api/process', methods=['POST'])
-def process():
+def preprocess():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
 
@@ -33,6 +33,36 @@ def process():
 
     print(f'File name: {file_name}')
     print(f'File media type: {file_media_type}')
+
+    # Read the processed files
+    png_file_path = os.path.join(OUTPUT_PNG_DIR, 'test.png')
+
+    if not os.path.exists(png_file_path):
+        return jsonify({'error': 'Processed files not found'}), 404
+
+    with open(png_file_path, 'rb') as png_file:
+        png_data = base64.b64encode(png_file.read()).decode('utf-8')
+
+    return jsonify({
+        'message': 'File processed successfully',
+        'png_data': png_data
+    }), 201
+
+@app.route('/api/process', methods=['POST'])
+def process():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    x = data.get('x')
+    y = data.get('y')
+    width = data.get('width')
+    height = data.get('height')
+
+    if x is None or y is None or width is None or height is None:
+        return jsonify({'error': 'Missing required parameters'}), 400
+
+    print(f'x: {x}, y: {y}, width: {width}, height: {height}')
 
     # Read the processed files
     png_file_path = os.path.join(OUTPUT_PNG_DIR, 'test.png')

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Draggable, { DraggableData, DraggableEvent } from 'react-draggable';
-import { process } from './api';
+import { preprocess, process } from './api';
 import './App.css';
 
 const App = () => {
@@ -8,15 +8,17 @@ const App = () => {
   const [svgUrl, setSvgUrl] = useState<string | null>(null);
   const [showPng, setShowPng] = useState<boolean>(true);
   const [showSvg, setShowSvg] = useState<boolean>(true);
+  const [showBorderCreation, setShowBorderCreation] = useState<boolean>(false);
+  const [showComparison, setShowComparison] = useState<boolean>(false);
   const [svgPosition, setSvgPosition] = useState({ x: 0, y: 0 });
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     if (file && file.type === 'application/pdf') {
-      const { pngUrl, svgUrl } = await process(file);
+      const pngUrl = await preprocess(file);
       setPngUrl(pngUrl);
-      setSvgUrl(svgUrl);
+      setShowBorderCreation(true);
     }
   };
 
@@ -57,7 +59,24 @@ const App = () => {
           </button>
         </div>
       </div>
-      <div style={{ marginTop: '220px', textAlign: 'center' }}>
+      {showBorderCreation && (
+        <div style={{ marginTop: '220px', textAlign: 'center' }}>
+          {pngUrl && (
+            <img
+              src={pngUrl}
+              alt="Processed PNG"
+              style={{
+                display: 'block',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+              }}
+            />
+          )}
+        </div>
+      )}
+      {showComparison && (<div style={{ marginTop: '220px', textAlign: 'center' }}>
         {pngUrl && svgUrl && (
           <div style={{ position: 'relative', display: 'inline-block'}}>
             {showPng && <img src={pngUrl} alt="Processed PNG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />}
@@ -70,7 +89,7 @@ const App = () => {
             )}
           </div>
         )}
-      </div>
+      </div>)}
     </div>
   );
 }

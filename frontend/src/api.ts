@@ -1,14 +1,12 @@
 import axios from "axios";
 
-export const process = async (
-  file: File
-): Promise<{ pngUrl: string; svgUrl: string }> => {
+export const preprocess = async (file: File): Promise<string> => {
   try {
     const formData = new FormData();
     formData.append("file", file);
 
     const response = await axios.post(
-      "http://127.0.0.1:5000/api/process",
+      "http://127.0.0.1:5000/api/preprocess",
       formData,
       {
         headers: {
@@ -16,6 +14,34 @@ export const process = async (
         },
       }
     );
+
+    const { png_data } = response.data;
+
+    // downloadFile(png_data, "image/png", "output.png");
+    // downloadFile(svg_data, "image/svg+xml", "output.svg");
+
+    const pngUrl = createObjectUrl(png_data, "image/png");
+
+    return pngUrl;
+  } catch (error) {
+    console.error("Error posting data:", error);
+    return "";
+  }
+};
+
+export const process = async (
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): Promise<{ pngUrl: string; svgUrl: string }> => {
+  try {
+    const response = await axios.post("http://127.0.0.1:5000/api/process", {
+      x,
+      y,
+      width,
+      height,
+    });
 
     const { png_data, svg_data } = response.data;
 
