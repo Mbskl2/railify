@@ -64,7 +64,7 @@ const App = () => {
             {showSvg && (
               <Draggable position={svgPosition} onDrag={handleDrag}>
                 <div>
-                  <img src={svgUrl} alt="Processed SVG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'transparent' }} />
+                  <img src={svgUrl} alt="Processed SVG" style={{ display: 'block', position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: 'transparent', filter: 'invert(29%) sepia(100%) saturate(7483%) hue-rotate(180deg) brightness(97%) contrast(104%)' }} />
                 </div>
               </Draggable>
             )}
