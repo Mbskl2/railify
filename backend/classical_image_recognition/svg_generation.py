@@ -17,13 +17,12 @@ def generate_svg_from_lines(line_segments, width=500, height=500):
     return svg_header + svg_lines + svg_footer
 
 
-def save_svg(svg_content):
+
+def save_svg(svg_content, output_file):
     # Specify the output file path
-    output_file = 'output.svg'
 
     # Write the SVG content to a file
     with open(output_file, 'w') as file:
         file.write(svg_content)
 
     print(f'SVG content saved to {output_file}')
-    return output_file
