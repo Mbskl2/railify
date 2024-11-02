@@ -1,5 +1,8 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+FILES_DIR = 'files'
 
 # initialize flask application
 app = Flask(__name__)
@@ -15,9 +18,12 @@ def process():
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    file_content = file.read()
+    # file_content = file.read()
     file_name = file.filename
     file_media_type = file.mimetype
+
+    file_path = os.path.join(FILES_DIR, file_name)
+    file.save(file_path)
 
     if file_media_type != 'application/pdf':
         return jsonify({'error': f'Invalid file type: {file_media_type}'}), 400
