@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import base64
-from backend.classical_image_recognition.pipline import run_preprocessing_pipeline, run_main_pipeline
+from classical_image_recognition.pipline import run_preprocessing_pipeline, run_main_pipeline
 
 INPUT_DIR = 'backend/files/input_pdfs'
 OUTPUT_PNG_DIR = 'backend/files/output_pngs'
@@ -26,6 +26,9 @@ def preprocess():
     file_media_type = file.mimetype
 
     file_path = os.path.join(INPUT_DIR, file_name)
+    global file_path_stupid_global_variable 
+    file_path_stupid_global_variable = file_path
+    print(file_path_stupid_global_variable)
     file.save(file_path)
 
     if file_media_type != 'application/pdf':
@@ -64,8 +67,9 @@ def process():
 
     print(f'x: {x}, y: {y}, width: {width}, height: {height}')
 
+    print(file_path_stupid_global_variable)
     # Read the processed files
-    png_file_path, svg_file_path = run_main_pipeline(x, y, width, height)
+    png_file_path, svg_file_path = run_main_pipeline(file_path_stupid_global_variable, x, y, width, height)
 
     if not os.path.exists(png_file_path) or not os.path.exists(svg_file_path):
         return jsonify({'error': 'Processed files not found'}), 404

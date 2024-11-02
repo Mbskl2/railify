@@ -5,9 +5,9 @@ from pdf2image import convert_from_path
 import cv2
 import numpy as np
 
-from svg_generation import generate_svg_from_lines, save_svg
-from line_manipulation import extend_lines
-from thicken import thicken_everything, thicken_everything_2, thicken_lines
+from classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
+from classical_image_recognition.line_manipulation import extend_lines
+from classical_image_recognition.thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 
 # Setup pipline to read in Image and Extract Lines
@@ -256,7 +256,7 @@ def run_preprocessing_pipeline(pdf_path):
     image_path = pdf_to_images(pdf_path)
     return image_path
 
-def run_main_pipeline(image_path, border_x, border_y, border_width, border_height):
+def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height):
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
     output_svg = os.path.join(os.curdir, "backend/temp/Temp.svg")
@@ -279,7 +279,7 @@ def run_main_pipeline(image_path, border_x, border_y, border_width, border_heigh
 
     height, width = image.shape 
     svg_text = generate_svg_from_lines(lines, width, height)
-    save_svg(svg_text)
+    output_svg = save_svg(svg_text)
     #image_path = thicken_lines(image_path, output_png)
 
     # # Turn image into graph
