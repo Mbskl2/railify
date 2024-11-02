@@ -9,7 +9,6 @@ def read_in_image(img_path):
 
 # Step 1 Crop
 
-
 # Step 2 Remove text
 
 # Step 3 Remove colors
