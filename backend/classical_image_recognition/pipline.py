@@ -10,6 +10,8 @@ import itertools
 import math
 import os
 
+from svg_generation import generate_svg_from_lines, render_svg
+from line_manipulation import extend_lines
 from thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 
@@ -249,6 +251,11 @@ def preserve_thin_lines(img_path, output_path, blob_size=10):
 
     return processed_image
 
+def run_preprocessing_pipeline(pdf_path):
+    image_path = pdf_to_images(pdf_path)
+    return image_path
+
+def run_main_pipeline(image_path, border_x, border_y, border_width, border_height):
 
 def fill_line_interruptions(img_path, output_path, gap_size=50):
     """
@@ -439,12 +446,14 @@ def thicken_black_pixels(image_path, output_path, kernel_size=5, iterations=10):
     print(f"Image with thickened black pixels saved to {output_path}")
 
 
+def run_preprocessing_pipeline(pdf_path):
+    image_path = pdf_to_images(pdf_path)
+    return image_path
 
-# Example usage
-if __name__ == '__main__':
-    pdf_path = "backend/testing_pdfs/L1_4711_Tobel.pdf"
+def run_main_pipeline(image_path, border_x, border_y, border_width, border_height):
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
+    output_svg = os.path.join(os.curdir, "backend/temp/Temp.svg")
 
     remove_text_from_pdf(pdf_path, output_pdf)
     image_path = pdf_to_images(output_pdf)
@@ -473,11 +482,18 @@ if __name__ == '__main__':
     # fill_line_interruptions(image_path, output_png)
 
     # Turn image into graph
-    # image_path = thicken_everything_2(image_path, image_path)
-
-    #image_path = thicken_lines(image_path, output_png)
-    # # Turn image into graph
     # nodes, edges_list, edge_image = image_to_graph(image_path)
+    image_path = thicken_everything_2(image_path, output_png)
+
+    image_path, lines = extend_lines(image_path, output_png)
+
+    height, width = image.shape
+    svg_text = generate_svg_from_lines(lines, width, height)
+    render_svg(svg_text)
+    #image_path = thicken_lines(image_path, output_png)
+
+    # # Turn image into graph
+    #nodes, edges_list, edge_image = image_to_graph(image_path)
 
     # Display or save edge_image to visualize detected lines
-    # cv2.imwrite(output_png, edge_image)
+    #cv2.imwrite(output_png, edge_image)
