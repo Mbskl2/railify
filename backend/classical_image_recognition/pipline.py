@@ -212,6 +212,44 @@ def image_to_graph(img_path, edge_threshold1=200, edge_threshold2=300, min_line_
 
     return nodes, edges_list, edge_image
 
+def preserve_thin_lines(img_path, output_path, blob_size=10):
+    """
+    Processes a grayscale bitmap image to remove thicker blobs or symbols while preserving thin lines.
+
+    Parameters:
+    - img_path (str): Path to the grayscale bitmap image.
+    - output_path (str): Path where the processed image will be saved.
+    - blob_size (int): Size of the kernel for removing thicker blobs (larger removes larger blobs).
+
+    Returns:
+    - processed_image (np.ndarray): The processed image with blobs removed and thin lines preserved.
+    """
+    # Load the grayscale image
+    image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    if image is None:
+        raise ValueError("Image could not be loaded. Check the file path.")
+
+    # Ensure the image is binary (0 and 255 only)
+    _, binary_image = cv2.threshold(image, 127, 255, cv2.THRESH_BINARY)
+
+    # Invert the image so that black parts (foreground) become white for easier blob removal
+    inverted_image = cv2.bitwise_not(binary_image)
+
+    # Remove blobs using morphological opening with a larger circular kernel
+    blob_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (blob_size, blob_size))
+    blobs_removed = cv2.morphologyEx(inverted_image, cv2.MORPH_OPEN, blob_kernel)
+
+    # Preserve thin lines by subtracting the blobs from the original inverted image
+    thin_lines_only = cv2.subtract(inverted_image, blobs_removed)
+
+    # Invert the result back to black on white
+    processed_image = cv2.bitwise_not(thin_lines_only)
+
+    # Save the processed image to the specified output path
+    cv2.imwrite(output_path, processed_image)
+
+    return processed_image
+
 # Example usage
 if __name__ == '__main__':
     pdf_path = "backend/testing_pdfs/L1.pdf"
@@ -225,8 +263,11 @@ if __name__ == '__main__':
     image = read_in_image(image_path)
     image_path = grayscale_to_bitmap(image, output_png)
 
+    # Adjust Grayscale image
+    processed_image = preserve_thin_lines(image_path, image_path)
+
     # Turn image into graph
-    nodes, edges_list, edge_image = image_to_graph(image_path)
+    # nodes, edges_list, edge_image = image_to_graph(image_path)
 
     # Display or save edge_image to visualize detected lines
-    cv2.imwrite(output_png, edge_image)
+    # cv2.imwrite(output_png, edge_image)
