@@ -14,13 +14,11 @@ export const process = async (file: File) => {
         },
       }
     );
-    console.log("File processed successfully:", response.data);
-    // const result: ReturnResult = response.data;
-    // downloadFile(
-    //   result.fileContent,
-    //   "application/octet-stream",
-    //   result.fileName
-    // );
+
+    const { png_data, svg_data } = response.data;
+
+    downloadFile(png_data, "image/png", "output.png");
+    downloadFile(svg_data, "image/svg+xml", "output.svg");
   } catch (error) {
     console.error("Error posting data:", error);
   }
