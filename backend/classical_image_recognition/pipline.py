@@ -272,7 +272,7 @@ if __name__ == '__main__':
     # nodes, edges_list, edge_image = image_to_graph(image_path)
     image_path = thicken_everything_2(image_path, output_png)
 
-    image_path = thicken_lines(image_path, output_png)
+    #image_path = thicken_lines(image_path, output_png)
     # # Turn image into graph
     nodes, edges_list, edge_image = image_to_graph(image_path)
 
