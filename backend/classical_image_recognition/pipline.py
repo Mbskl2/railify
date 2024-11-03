@@ -15,11 +15,16 @@ import os
 from backend.classical_image_recognition.box_utilites import remove_grey_boxes
 from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
 from backend.classical_image_recognition.line_manipulation import generate_lines, process_lines
+from backend.classical_image_recognition.create_graph import simplify_svg_graph, plot_graph_from_json
+
+import json
 
 # from box_utilites import remove_grey_boxes
 # from svg_generation import generate_svg_from_lines, save_svg
 # from line_manipulation import generate_lines, process_lines
 
+from ultralytics import YOLO
+import svgwrite
 
 # Setup pipline to read in Image and Extract Lines
 def pdf_to_images(pdf_path, output_folder='backend/temp', dpi=300, name="page"):
@@ -271,11 +276,33 @@ def delete_short_edges(svg_path, output_path, height, width, length_threshold):
         print(f"Error processing SVG: {e}")
 
 
+def combine_svgs(svg_path1, svg_path2, output_path):
+    # Read the first SVG file
+    tree1 = ET.parse(svg_path1)
+    root1 = tree1.getroot()
+
+    # Read the second SVG file
+    tree2 = ET.parse(svg_path2)
+    root2 = tree2.getroot()
+
+    # Adjust namespace for SVG if needed
+    ET.register_namespace('', "http://www.w3.org/2000/svg")
+
+    # Append all elements from root2 to root1
+    for element in root2:
+        root1.append(element)
+
+    # Save the combined SVG to the output path
+    tree1.write(output_path)
+
 def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height):
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
     output_svg = os.path.join(os.curdir, "backend/temp/Temp.svg")
     cropped_image_path = os.path.join(os.curdir, "backend/temp/Temp_Crop.png")
+    model_generated_svg_path = os.path.join(os.curdir, "backend/temp/Temp_Model.svg")
+    json_filepath = os.path.join(os.curdir, "backend/temp/Temp.json")
+
 
     #######################################################################################
     # 1.) HERE: Save Cropped Image for Output
@@ -301,6 +328,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     # Extend Lines to Cover Gaps
     image_path, lines = generate_lines(image_path, output_png)
 
+    # Melt touching Lines Together
     lines = process_lines(lines)
 
     # Generate and save SVG
@@ -311,10 +339,58 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     # Adjust the SVG
     svg_file = read_svg(output_svg)
     # Connect Edges here
-    delete_short_edges(output_svg, output_svg, height, width, length_threshold=100)
+    delete_short_edges(output_svg, output_svg, height, width, length_threshold=250)
 
     ###############################################################################
     # 3.) Load DL Model
+    model = YOLO("backend/deep_learning_approach/last.pt")
+
+    # Path to your image
+    results = model(cropped_image_path)
+    # Extract detections
+    detections = results[0]  # Get the first (and only) result
+    dwg = svgwrite.Drawing(model_generated_svg_path, size=(width, height))
+
+    # Add bounding boxes and labels to the SVG
+    for box in detections.boxes:
+        x1, y1, x2, y2 = map(int, box.xyxy[0])  # Bounding box coordinates
+        conf = box.conf[0]  # Confidence score
+        cls = int(box.cls[0])  # Class index
+        label = model.names[cls]  # Class label
+
+        # Draw bounding box as a rectangle
+        dwg.add(
+            dwg.rect(
+                insert=(x1, y1),
+                size=(x2 - x1, y2 - y1),
+                fill="none",
+                stroke="red",
+                stroke_width=2,
+            )
+        )
+
+        # Add label and confidence text
+        dwg.add(
+            dwg.text(
+                f"{label} {conf:.2f}",
+                insert=(x1, y1 - 5),
+                fill="red",
+                font_size="12px",
+                font_family="Arial",
+            )
+        )
+
+    # Save the SVG file
+    dwg.save()
+
+    ###################################################################
+    # 4.) Create Graph from SVG
+    json_path = simplify_svg_graph(output_svg)
+    plot_graph_from_json(json_path)
+
+    ###################################################################
+    # 5.) Combine the two svgs
+    combine_svgs(model_generated_svg_path, output_svg, output_svg)
 
     return cropped_image_path, output_svg
 
