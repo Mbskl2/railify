@@ -299,11 +299,3 @@ def process_lines(lines, width=30, angle_threshold=2):
             new_lines.append(new_line)
 
     return new_lines
-    # result_tuples = []
-    # for new_line in new_lines:
-    #     first_coord = new_line.coords[0]
-    #     last_coord = new_line.coords[-1]
-
-    #     # Combine them into a tuple of 4 values
-    #     result_tuples.append(first_coord + last_coord)
-    # return result_tuples
