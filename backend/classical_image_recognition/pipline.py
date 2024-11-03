@@ -13,14 +13,14 @@ from PIL import Image
 
 from backend.classical_image_recognition.box_utilites import remove_grey_boxes, remove_grey_boxes_with_scale
 from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
-from backend.classical_image_recognition.line_manipulation import generate_lines as extend_lines
+from backend.classical_image_recognition.line_manipulation import generate_lines
 from backend.classical_image_recognition.thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 
-from box_utilites import remove_grey_boxes, remove_grey_boxes_with_scale
-from svg_generation import generate_svg_from_lines, save_svg
-from line_manipulation import generate_lines
-from thicken import thicken_everything, thicken_everything_2, thicken_lines
+# from box_utilites import remove_grey_boxes, remove_grey_boxes_with_scale
+# from svg_generation import generate_svg_from_lines, save_svg
+# from line_manipulation import generate_lines
+# from thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 
 # Setup pipline to read in Image and Extract Lines
@@ -382,7 +382,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     # nodes, edges_list, edge_image = image_to_graph(image_path)
     # image_path = thicken_everything_2(image_path, output_png)
 
-    image_path, lines = extend_lines(image_path, output_png)
+    image_path, lines = generate_lines(image_path, output_png)
 
     height, width = image.shape
     svg_text = generate_svg_from_lines(lines, width, height)
