@@ -1,13 +1,12 @@
-<svg width="3500" height="1500" xmlns="http://www.w3.org/2000/svg"><line x1="324.9651668293682" y1="787.4310809485851" x2="3052.0387686982326" y2="797.5033749536408" stroke="black" stroke-width="20" />
-<line x1="1089.9251365869964" y1="549.5836637372852" x2="2256.107642343284" y2="561.0958306253037" stroke="black" stroke-width="20" />
-<line x1="2536.0" y1="970.0" x2="2221.0" y2="970.0" stroke="black" stroke-width="20" />
-<line x1="2118.0" y1="102.99999999999999" x2="1699.9999999999995" y2="99.99999999999997" stroke="black" stroke-width="20" />
-<line x1="2610.0" y1="544.0" x2="2268.0" y2="544.0" stroke="black" stroke-width="20" />
-<line x1="2861.0" y1="917.5" x2="2597.0" y2="917.5" stroke="black" stroke-width="20" />
-<line x1="3529.0" y1="793.0" x2="3077.0" y2="793.0" stroke="black" stroke-width="20" />
-<line x1="256.0" y1="793.0" x2="-29.0" y2="793.0" stroke="black" stroke-width="20" />
-<line x1="1838.803991912157" y1="794.2717310321406" x2="1580.7594033076946" y2="806.5595685847444" stroke="black" stroke-width="20" />
-<line x1="908.1043447808527" y1="821.3013779386363" x2="1138.895655219144" y2="534.6617645938891" stroke="black" stroke-width="20" />
-<line x1="2796.91024184424" y1="810.4845945975559" x2="2574.4343838868654" y2="534.2073853694375" stroke="black" stroke-width="20" />
-<line x1="2439.2707385185577" y1="792.8585092820856" x2="2242.844331647357" y2="992.2849161532789" stroke="black" stroke-width="20" />
+<svg xmlns="http://www.w3.org/2000/svg" baseProfile="full" height="526" version="1.1" width="4483"><defs /><rect fill="none" height="95" stroke="red" stroke-width="2" width="250" x="790" y="176" /><text fill="red" font-family="Arial" font-size="12px" x="790" y="171">traffic_light 0.69</text><rect fill="none" height="95" stroke="red" stroke-width="2" width="223" x="3351" y="320" /><text fill="red" font-family="Arial" font-size="12px" x="3351" y="315">traffic_light 0.68</text><rect fill="none" height="104" stroke="red" stroke-width="2" width="89" x="2944" y="299" /><text fill="red" font-family="Arial" font-size="12px" x="2944" y="294">switch_2 0.40</text><rect fill="none" height="91" stroke="red" stroke-width="2" width="178" x="4021" y="317" /><text fill="red" font-family="Arial" font-size="12px" x="4021" y="312">traffic_light 0.37</text><rect fill="none" height="109" stroke="red" stroke-width="2" width="107" x="2933" y="270" /><text fill="red" font-family="Arial" font-size="12px" x="2933" y="265">switch_2 0.34</text><rect fill="none" height="89" stroke="red" stroke-width="2" width="100" x="2438" y="289" /><text fill="red" font-family="Arial" font-size="12px" x="2438" y="284">switch_2 0.28</text><line x1="2098.07217739852" y1="316.774676901981" x2="538.933939054921" y2="298.6977770840821" stroke="black" stroke-width="20" />
+<line x1="1299.9584016574654" y1="84.81955354548555" x2="2496.0953851207087" y2="61.99977007718837" stroke="black" stroke-width="20" />
+<line x1="4329.013406843607" y1="297.8867944942563" x2="2697.9433789009217" y2="302.36160938573147" stroke="black" stroke-width="20" />
+<line x1="2406.0" y1="302.0" x2="2135.0" y2="302.0" stroke="black" stroke-width="20" />
+<line x1="2802.0" y1="72.0" x2="2526.0" y2="72.0" stroke="black" stroke-width="20" />
+<line x1="2746.0" y1="485.0" x2="2449.0" y2="485.0" stroke="black" stroke-width="20" />
+<line x1="469.0" y1="308.0" x2="186.0" y2="308.0" stroke="black" stroke-width="20" />
+<line x1="1862.656857060017" y1="313.50637866048123" x2="2120.296172803711" y2="304.19411423601036" stroke="black" stroke-width="20" />
+<line x1="1118.1043447808559" y1="336.3013779386362" x2="1348.8956552191437" y2="49.692015170170464" stroke="black" stroke-width="20" />
+<line x1="2453.7867965644" y1="508.2132034355968" x2="2675.2132034356" y2="286.7867965644034" stroke="black" stroke-width="20" />
+<line x1="3015.2247794986633" y1="334.0414908632331" x2="2782.6745893997822" y2="49.05055891189886" stroke="black" stroke-width="20" />
 </svg>

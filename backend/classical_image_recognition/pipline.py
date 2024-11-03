@@ -12,10 +12,10 @@ from pdf2image import convert_from_path
 import cv2
 import os
 
-from backend.classical_image_recognition.box_utilites import remove_grey_boxes
-from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
-from backend.classical_image_recognition.line_manipulation import generate_lines, process_lines
-from backend.classical_image_recognition.create_graph import simplify_svg_graph, plot_graph_from_json
+from classical_image_recognition.box_utilites import remove_grey_boxes
+from classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
+from classical_image_recognition.line_manipulation import generate_lines, process_lines
+from classical_image_recognition.create_graph import simplify_svg_graph, plot_graph_from_json
 
 import json
 
@@ -48,6 +48,9 @@ def read_in_image(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     return img
 
+def run_preprocessing_pipeline(pdf_path):
+    image_path = pdf_to_images(pdf_path)
+    return image_path
 
 def remove_text_from_pdf(input_pdf_path, output_pdf_path):
     # Open the PDF file
