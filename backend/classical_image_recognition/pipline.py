@@ -12,8 +12,13 @@ from pdf2image import convert_from_path
 import cv2
 import os
 
+from backend.classical_image_recognition.box_utilites import remove_grey_boxes
 from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
-from backend.classical_image_recognition.line_manipulation import generate_lines as extend_lines
+from backend.classical_image_recognition.line_manipulation import generate_lines, process_lines
+
+# from box_utilites import remove_grey_boxes
+# from svg_generation import generate_svg_from_lines, save_svg
+# from line_manipulation import generate_lines, process_lines
 
 
 # Setup pipline to read in Image and Extract Lines
@@ -284,6 +289,8 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
 
     crop_image(image_path, image_path, border_x, border_y, border_width, border_height)
 
+    image_path = remove_grey_boxes(image_path, output_png)
+
     # Turn PNG image into bit map
     image = read_in_image(image_path)
     image_path = grayscale_to_bitmap(image, output_png)
@@ -292,7 +299,9 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     preserve_thin_lines(image_path, image_path)
 
     # Extend Lines to Cover Gaps
-    image_path, lines = extend_lines(image_path, output_png)
+    image_path, lines = generate_lines(image_path, output_png)
+
+    lines = process_lines(lines)
 
     # Generate and save SVG
     height, width = image.shape
