@@ -26,3 +26,5 @@ def save_svg(svg_content, output_file):
         file.write(svg_content)
 
     print(f'SVG content saved to {output_file}')
+
+    return output_file

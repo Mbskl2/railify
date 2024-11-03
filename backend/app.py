@@ -26,7 +26,7 @@ def preprocess():
     file_media_type = file.mimetype
 
     file_path = os.path.join(INPUT_DIR, file_name)
-    global file_path_stupid_global_variable 
+    global file_path_stupid_global_variable
     file_path_stupid_global_variable = file_path
     print(file_path_stupid_global_variable)
     file.save(file_path)
@@ -57,10 +57,10 @@ def process():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
 
-    x = data.get('left')
-    y = data.get('top')
-    width = data.get('width')
-    height = data.get('height')
+    x = int(data.get('left'))
+    y = int(data.get('top'))
+    width = int(data.get('width'))
+    height = int(data.get('height'))
 
     if x is None or y is None or width is None or height is None:
         return jsonify({'error': 'Missing required parameters'}), 400
