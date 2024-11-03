@@ -19,7 +19,7 @@ from backend.classical_image_recognition.thicken import thicken_everything, thic
 
 # from box_utilites import remove_grey_boxes, remove_grey_boxes_with_scale
 # from svg_generation import generate_svg_from_lines, save_svg
-# from line_manipulation import generate_lines
+# from line_manipulation import generate_lines, process_lines
 # from thicken import thicken_everything, thicken_everything_2, thicken_lines
 
 
@@ -383,6 +383,8 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     # image_path = thicken_everything_2(image_path, output_png)
 
     image_path, lines = generate_lines(image_path, output_png)
+
+    lines = process_lines(lines)
 
     height, width = image.shape
     svg_text = generate_svg_from_lines(lines, width, height)

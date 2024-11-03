@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from scipy.spatial.distance import euclidean
+from shapely import minimum_rotated_rectangle
 
 def group_lines(lines, angle_threshold=1, distance_threshold=10):
     groups = []
@@ -172,3 +173,137 @@ def merge_line_segments(group):
 # # Usage
 # image_path = 'backend/temp/temp.png'
 # extend_lines(image_path, 'result.png')
+
+#def join_large_lines(lines):
+    
+import math
+import numpy as np
+from shapely.geometry import box, Polygon
+
+def create_bounding_box(line, width=30):
+    x1, y1, x2, y2 = line
+    length = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+    angle = math.atan2(y2 - y1, x2 - x1)
+    
+    dx = width / 2 * math.sin(angle)
+    dy = width / 2 * math.cos(angle)
+    
+    corners = [
+        (x1 - dx, y1 + dy),
+        (x1 + dx, y1 - dy),
+        (x2 + dx, y2 - dy),
+        (x2 - dx, y2 + dy)
+    ]
+    return Polygon(corners)
+
+def group_lines_by_angle(lines, angle_threshold=2):
+    grouped_lines = {}
+    for line in lines:
+        x1, y1, x2, y2 = line
+        angle = math.degrees(math.atan2(y2 - y1, x2 - x1)) % 180
+        
+        found_group = False
+        for group_angle in grouped_lines:
+            if abs(angle - group_angle) <= angle_threshold:
+                grouped_lines[group_angle].append(line)
+                found_group = True
+                break
+        
+        if not found_group:
+            grouped_lines[angle] = [line]
+    
+    return grouped_lines
+
+from shapely.geometry import box
+from collections import defaultdict
+
+def group_overlapping_boxes(boxes):
+    # Create a dictionary to store the groups
+    groups = defaultdict(set)
+    
+    # Assign each box to a group
+    for i, box1 in enumerate(boxes):
+        groups[i].add(i)
+        for j, box2 in enumerate(boxes[i+1:], start=i+1):
+            if box1.intersects(box2):
+                groups[i].add(j)
+                groups[j].add(i)
+    
+    # Merge overlapping groups
+    merged_groups = []
+    processed = set()
+    
+    for i, group in groups.items():
+        if i not in processed:
+            merged_group = set(group)
+            to_process = list(group)
+            
+            while to_process:
+                j = to_process.pop()
+                if j not in processed:
+                    merged_group.update(groups[j])
+                    to_process.extend(groups[j])
+                    processed.add(j)
+            
+            merged_groups.append([boxes[i] for i in merged_group])
+    
+    return merged_groups
+
+
+from shapely.geometry import box, LineString
+from shapely.ops import unary_union
+from shapely.geometry import LineString, Point
+from shapely.ops import unary_union
+from shapely import minimum_rotated_rectangle
+
+def get_middle_line(boxes):
+    # Create a bounding box around all the given boxes
+    union_of_boxes = unary_union(boxes)
+    rotated_bounding_box = minimum_rotated_rectangle(union_of_boxes)
+
+        # Get the coordinates of the rotated box
+    coords = list(rotated_bounding_box.exterior.coords)
+    
+    # Calculate the lengths of all sides
+    sides = [LineString([coords[i], coords[i+1]]) for i in range(4)]
+    lengths = [side.length for side in sides]
+    
+    # Find the indices of the two shorter sides
+    short_side_indices = sorted(range(4), key=lambda i: lengths[i])[:2]
+    
+    # Calculate midpoints of the shorter sides
+    midpoints = [Point(sides[i].interpolate(0.5, normalized=True)) for i in short_side_indices]
+    
+    # Create a line between these midpoints
+    middle_line = LineString(midpoints)
+    
+    # Extract start and end coordinates
+    start_x, start_y = middle_line.coords[0]
+    end_x, end_y = middle_line.coords[1]
+    
+    return (start_x, start_y, end_x, end_y)
+
+def process_lines(lines, width=30, angle_threshold=2):
+    grouped_lines = group_lines_by_angle(lines, angle_threshold)
+    results = {}
+    
+    for angle, group in grouped_lines.items():
+        bounding_boxes = [create_bounding_box(line, width) for line in group]
+        merged_boxes = group_overlapping_boxes(bounding_boxes)
+        results[angle] = merged_boxes
+
+    new_lines = []
+    for group in results.values():
+        for boxes in group:
+            new_line = get_middle_line(boxes)
+            new_lines.append(new_line)
+
+    return new_lines
+    # result_tuples = []
+    # for new_line in new_lines:
+    #     first_coord = new_line.coords[0]
+    #     last_coord = new_line.coords[-1]
+
+    #     # Combine them into a tuple of 4 values
+    #     result_tuples.append(first_coord + last_coord)
+    # return result_tuples
