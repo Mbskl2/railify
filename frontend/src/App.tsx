@@ -13,12 +13,15 @@ const App = () => {
   const [svgPosition, setSvgPosition] = useState({ x: 0, y: 0 });
   const [border, setBorder] = useState({ top: 0, left: 0, width: 0, height: 0 });
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     if (file && file.type === 'application/pdf') {
+      setIsLoading(true);
       const pngUrl = await preprocess(file);
+      setIsLoading(false);
       setPngUrl(pngUrl);
       setShowBorderCreation(true);
     }
@@ -60,7 +63,9 @@ const App = () => {
 
   const handleConfirmBorder = async () => {
     setShowBorderCreation(false);
+    setIsLoading(true);
     const { pngUrl, svgUrl } = await process(border);
+    setIsLoading(false);
     setPngUrl(pngUrl);
     setSvgUrl(svgUrl);
     setShowComparison(true);
@@ -98,6 +103,7 @@ const App = () => {
           </button>
         </div>}
       </div>
+      {isLoading && <div className="spinner"></div>}
       {showBorderCreation && (
         <div style={{ marginTop: '220px', textAlign: 'center' }}>
           {pngUrl && (
