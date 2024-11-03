@@ -1,4 +1,12 @@
+import math
+
 import fitz
+import numpy as np
+
+import xml.etree.ElementTree as ET
+
+from bs4 import BeautifulSoup
+
 from pdf2image import convert_from_path
 
 import cv2
@@ -179,6 +187,85 @@ def resize_image(img_path, output_path, width=1920, height=1080):
     return resized_image
 
 
+def read_svg(file_path):
+    try:
+        with open(file_path, "r") as file:
+            svg_content = file.read()
+            soup = BeautifulSoup(svg_content, "xml")  # Parse as XML
+        return soup  # Returns the BeautifulSoup object
+    except Exception as e:
+        print(f"Error reading SVG file: {e}")
+        return None
+
+
+def calculate_distance(points: list):
+    points = np.array(points)
+    point1 = np.array(points[:2])
+    point2 = np.array(points[2:])
+    return np.linalg.norm(point2 - point1)
+
+
+def is_almost_equal(a, b, tol=1e-2):
+    """Helper function to check if two floats are approximately equal."""
+    return math.isclose(a, b, abs_tol=tol)
+
+
+def extract_lines_from_svg_with_specific_lenght(svg_string, length_threshold):
+    """
+    Extracts all line elements from an SVG string as a list of coordinates.
+
+    Parameters:
+    - svg_string (str): SVG content as a string.
+
+    Returns:
+    - List of lines in the format [[x1, y1, x2, y2]].
+    """
+    # Parse the SVG string
+    root = ET.fromstring(svg_string)
+
+    # Extract namespace if present
+    namespace = root.tag.split("}")[0] + "}" if "}" in root.tag else ""
+
+    # Find all line elements
+    lines = []
+    for line in root.findall(f".//{namespace}line"):
+        # Extract coordinates as floats
+        x1 = float(line.get("x1"))
+        y1 = float(line.get("y1"))
+        x2 = float(line.get("x2"))
+        y2 = float(line.get("y2"))
+
+        distance = calculate_distance([x1, y1, x2, y2])
+        vertical = is_almost_equal(x1, x2)
+
+        if distance > length_threshold and not vertical:
+            # Append to the lines list
+            lines.append((x1, y1, x2, y2))
+
+    return lines
+
+
+def delete_short_edges(svg_path, output_path, height, width, length_threshold):
+    """
+    Deletes edges (paths) from an SVG file that are below a specified length threshold.
+
+    Parameters:
+    - svg_path (str): Path to the original SVG file.
+    - output_path (str): Path where the modified SVG will be saved.
+    - length_threshold (float): The minimum length for edges to retain.
+    """
+    try:
+        # Load SVG file
+        with open(svg_path, "r") as file:
+            svg_content = file.read()
+            paths = extract_lines_from_svg_with_specific_lenght(svg_content, length_threshold)
+            svg_content = generate_svg_from_lines(paths, width=width, height=height)
+            save_svg(svg_content, output_path)
+
+    except Exception as e:
+        print(f"Error processing SVG: {e}")
+
+
 def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height):
     output_pdf = os.path.join(os.curdir, "backend/temp/Temp.pdf")
     output_png = os.path.join(os.curdir, "backend/temp/Temp.png")
@@ -213,10 +300,13 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     output_svg = save_svg(svg_text, output_svg)
 
     # Adjust the SVG
+    svg_file = read_svg(output_svg)
+    # Connect Edges here
+    delete_short_edges(output_svg, output_svg, height, width, length_threshold=100)
 
     return cropped_image_path, output_svg
 
 
 if __name__ == "__main__":
-    path = "backend/testing_pdfs/L1.pdf"
+    path = "backend/files/input_pdfs/L1.pdf"
     run_main_pipeline(path, 500, 1000, 3500, 1500)
