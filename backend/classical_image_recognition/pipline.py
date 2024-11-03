@@ -304,6 +304,9 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     # Connect Edges here
     delete_short_edges(output_svg, output_svg, height, width, length_threshold=100)
 
+    ###############################################################################
+    # 3.) Load DL Model
+
     return cropped_image_path, output_svg
 
 
