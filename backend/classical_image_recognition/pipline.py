@@ -338,8 +338,9 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
 
     lines = join_horizontal_lines(lines)
 
-    for i in range(3):
-        lines = process_lines(lines, 30, 5)
+    # for i in range(3):
+    #     lines = process_lines(lines, 30, 5)
+    # lines = process_lines(lines)
 
     # Generate and save SVG
     height, width = image.shape
