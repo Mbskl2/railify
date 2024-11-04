@@ -14,14 +14,15 @@ import os
 
 from backend.classical_image_recognition.box_utilites import remove_grey_boxes
 from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
-from backend.classical_image_recognition.line_manipulation import generate_lines, process_lines
+from backend.classical_image_recognition.line_manipulation import generate_lines, join_horizontal_lines, process_lines
 from backend.classical_image_recognition.create_graph import simplify_svg_graph, plot_graph_from_json
 
 import json
 
 # from box_utilites import remove_grey_boxes
 # from svg_generation import generate_svg_from_lines, save_svg
-# from line_manipulation import generate_lines, process_lines
+# from line_manipulation import generate_lines, process_lines, join_horizontal_lines
+# from create_graph import simplify_svg_graph, plot_graph_from_json
 
 from ultralytics import YOLO
 import svgwrite
@@ -330,6 +331,11 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
 
     # Melt touching Lines Together
     lines = process_lines(lines)
+
+    lines = join_horizontal_lines(lines)
+
+    for i in range(3):
+        lines = process_lines(lines, 30, 5)
 
     # Generate and save SVG
     height, width = image.shape

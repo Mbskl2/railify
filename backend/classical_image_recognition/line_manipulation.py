@@ -196,6 +196,16 @@ def create_bounding_box(line, width=30):
     ]
     return Polygon(corners)
 
+def closest_n_degree_increment(angle, n):
+    # Ensure angle is between 0 and 180
+    angle = angle % 180
+    
+    # Round to nearest 5-degree increment
+    rounded = round(angle / n) * n
+    
+    # Ensure result is between 0 and 180
+    return min(180, max(0, rounded))
+
 def group_lines_by_angle(lines, angle_threshold=2):
     grouped_lines = {}
     for line in lines:
@@ -210,7 +220,7 @@ def group_lines_by_angle(lines, angle_threshold=2):
                 break
         
         if not found_group:
-            grouped_lines[angle] = [line]
+            grouped_lines[closest_n_degree_increment(angle, angle_threshold)] = [line]
     
     return grouped_lines
 
@@ -299,3 +309,59 @@ def process_lines(lines, width=30, angle_threshold=2):
             new_lines.append(new_line)
 
     return new_lines
+
+
+import math
+
+def is_horizontal(line, threshold=5):
+    x1, y1, x2, y2 = line
+    angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
+    return abs(angle) <= threshold or abs(angle - 180) <= threshold
+
+def join_horizontal_lines(lines, threshold=10):
+    horizontal_lines = [line for line in lines if is_horizontal(line, threshold)]
+    non_horizontal_lines = [line for line in lines if not is_horizontal(line, threshold)]
+    
+    joined_lines = []
+    while horizontal_lines:
+        current_line = horizontal_lines.pop(0)
+        x_min, y_start, x_max, y_end = current_line
+        additional_lines = []
+        
+        changed = True
+        while changed:
+            changed = False
+            for i, line in enumerate(horizontal_lines):
+                lx1, ly1, lx2, ly2 = line
+                
+                # Check if the lines can be joined
+                if (is_horizontal((x_max, y_end, lx1, ly1), threshold) or
+                    is_horizontal((x_max, y_end, lx2, ly2), threshold) or
+                    is_horizontal((x_min, y_start, lx1, ly1), threshold) or
+                    is_horizontal((x_min, y_start, lx2, ly2), threshold)):
+                    
+                    # Update x_min and x_max
+                    x_min = min(x_min, lx1, lx2)
+                    x_max = max(x_max, lx1, lx2)
+                    
+                    # Update y_start and y_end based on the new x_min and x_max
+                    if x_min == lx1:
+                        y_start = ly1
+                    elif x_min == lx2:
+                        y_start = ly2
+                    
+                    if x_max == lx1:
+                        y_end = ly1
+                    elif x_max == lx2:
+                        y_end = ly2
+                    
+                    additional_lines.append(horizontal_lines.pop(i))
+                    changed = True
+                    break
+        
+        joined_lines.append((x_min, y_start, x_max, y_end))
+    
+    # Combine joined horizontal lines and non-horizontal lines
+    all_lines = joined_lines + lines
+    
+    return all_lines
