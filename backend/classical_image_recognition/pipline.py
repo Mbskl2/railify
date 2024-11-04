@@ -12,10 +12,10 @@ from pdf2image import convert_from_path
 import cv2
 import os
 
-from backend.classical_image_recognition.box_utilites import remove_grey_boxes
-from backend.classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
-from backend.classical_image_recognition.line_manipulation import generate_lines, join_horizontal_lines, process_lines
-from backend.classical_image_recognition.create_graph import simplify_svg_graph, plot_graph_from_json
+from classical_image_recognition.box_utilites import remove_grey_boxes
+from classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
+from classical_image_recognition.line_manipulation import generate_lines, process_lines
+from classical_image_recognition.create_graph import simplify_svg_graph, plot_graph_from_json
 
 import json
 
@@ -49,6 +49,9 @@ def read_in_image(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     return img
 
+def run_preprocessing_pipeline(pdf_path):
+    image_path = pdf_to_images(pdf_path)
+    return image_path
 
 def remove_text_from_pdf(input_pdf_path, output_pdf_path):
     # Open the PDF file
@@ -303,6 +306,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     cropped_image_path = os.path.join(os.curdir, "backend/temp/Temp_Crop.png")
     model_generated_svg_path = os.path.join(os.curdir, "backend/temp/Temp_Model.svg")
     json_filepath = os.path.join(os.curdir, "backend/temp/Temp.json")
+    graph_plot_path = os.path.join(os.curdir, "backend/temp/Temp_graph.png")
 
 
     #######################################################################################
@@ -349,7 +353,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
 
     ###############################################################################
     # 3.) Load DL Model
-    model = YOLO("backend/deep_learning_approach/last.pt")
+    model = YOLO("backend/deep_learning_approach/last_2.pt")
 
     # Path to your image
     results = model(cropped_image_path)
@@ -371,7 +375,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
                 size=(x2 - x1, y2 - y1),
                 fill="none",
                 stroke="red",
-                stroke_width=2,
+                stroke_width=10,
             )
         )
 
@@ -381,7 +385,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
                 f"{label} {conf:.2f}",
                 insert=(x1, y1 - 5),
                 fill="red",
-                font_size="12px",
+                font_size="48px",
                 font_family="Arial",
             )
         )
@@ -392,7 +396,7 @@ def run_main_pipeline(pdf_path, border_x, border_y, border_width, border_height)
     ###################################################################
     # 4.) Create Graph from SVG
     json_path = simplify_svg_graph(output_svg)
-    plot_graph_from_json(json_path)
+    plot_graph_from_json(json_path, graph_plot_path)
 
     ###################################################################
     # 5.) Combine the two svgs

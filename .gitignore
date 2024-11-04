@@ -4,3 +4,5 @@ templates/public/bundle.js
 templates/public/index.html
 venv
 **/QATM_pytorch/
+/backend/temp/
+.idea/

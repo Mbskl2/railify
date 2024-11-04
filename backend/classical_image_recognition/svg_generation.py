@@ -11,7 +11,7 @@ def generate_svg_from_lines(line_segments, width=500, height=500):
     svg_lines = ""
 
     for (x1, y1, x2, y2) in line_segments:
-        svg_lines += f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="black" stroke-width="20" />\n'
+        svg_lines += f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="blue" stroke-width="20" />\n'
 
     svg_footer = '</svg>'
     return svg_header + svg_lines + svg_footer
