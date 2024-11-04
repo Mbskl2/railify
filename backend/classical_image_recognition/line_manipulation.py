@@ -196,15 +196,15 @@ def create_bounding_box(line, width=30):
     ]
     return Polygon(corners)
 
-def closest_n_degree_increment(angle, n):
-    # Ensure angle is between 0 and 180
-    angle = angle % 180
+# def closest_n_degree_increment(angle, n):
+#     # Ensure angle is between 0 and 180
+#     angle = angle % 180
     
-    # Round to nearest 5-degree increment
-    rounded = round(angle / n) * n
+#     # Round to nearest 5-degree increment
+#     rounded = round(angle / n) * n
     
-    # Ensure result is between 0 and 180
-    return min(180, max(0, rounded))
+#     # Ensure result is between 0 and 180
+#     return min(180, max(0, rounded))
 
 def group_lines_by_angle(lines, angle_threshold=2):
     grouped_lines = {}
@@ -220,7 +220,7 @@ def group_lines_by_angle(lines, angle_threshold=2):
                 break
 
         if not found_group:
-            grouped_lines[closest_n_degree_increment(angle, angle_threshold)] = [line]
+            grouped_lines[angle] = [line]
     
     return grouped_lines
 

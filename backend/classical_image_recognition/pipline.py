@@ -14,7 +14,7 @@ import os
 
 from classical_image_recognition.box_utilites import remove_grey_boxes
 from classical_image_recognition.svg_generation import generate_svg_from_lines, save_svg
-from classical_image_recognition.line_manipulation import generate_lines, process_lines
+from classical_image_recognition.line_manipulation import generate_lines, join_horizontal_lines, process_lines
 from classical_image_recognition.create_graph import simplify_svg_graph, plot_graph_from_json
 
 import json
